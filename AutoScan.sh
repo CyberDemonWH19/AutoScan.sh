@@ -203,39 +203,39 @@ function ctrl_c() {
 #** Main / Principal
 #** Si no eres root no puedes ejecutarla
 if [ "$(id -u)" == "0" ]; then
-    declare -i parameter_enable=0
+    declare -i parametros=0
     while getopts ":m:h:" arg; do
         case $arg in
-        m) mode=$OPTARG && let parameter_enable+=1 ;;
+        m) modo=$OPTARG && let parametros+=1 ;;
         h) helpPanel ;;
         esac
     done
-    if [ $parameter_enable -ne 1 ]; then
+    if [ $parametros -ne 1 ]; then
         helpPanel
     else #** Dependiendo del modo ejecuta cada escaneo
-        if [ "$mode" == "TCP" ] || [ "$mode" == "Tcp" ] || [ "$mode" == "tcp" ]; then
+        if [ "$modo" == "TCP" ] || [ "$modo" == "Tcp" ] || [ "$modo" == "tcp" ]; then
             banner
             DependenciaA
             TCPscan
-        elif [ "$mode" == "UDP" ] || [ "$mode" == "Udp" ] || [ "$mode" == "udp" ]; then
+        elif [ "$modo" == "UDP" ] || [ "$modo" == "Udp" ] || [ "$modo" == "udp" ]; then
             banner
             DependenciaA
             UDPscan
-        elif [ "$mode" == "Sistema" ] || [ "$mode" == "SISTEMA" ] || [ "$mode" == "sistema" ]; then
+        elif [ "$modo" == "Sistema" ] || [ "$modo" == "SISTEMA" ] || [ "$modo" == "sistema" ]; then
             banner
             Sistema
-        elif [ "$mode" == "SCTP" ] || [ "$mode" == "Sctp" ] || [ "$mode" == "sctp" ]; then
+        elif [ "$modo" == "SCTP" ] || [ "$modo" == "Sctp" ] || [ "$modo" == "sctp" ]; then
             banner
             DependenciaA
             SCTPscan
-        elif [ "$mode" == "GOBUSCAN" ] || [ "$mode" == "Gobuscan" ] || [ "$mode" == "gobuscan" ]; then
+        elif [ "$modo" == "GOBUSCAN" ] || [ "$modo" == "Gobuscan" ] || [ "$modo" == "gobuscan" ]; then
             banner
             DependenciaB
             GobuScan
-        elif [ "$mode" == "IPSCAN" ] || [ "$mode" == "IPscan" ] || [ "$mode" == "ipscan" ]; then
+        elif [ "$modo" == "IPSCAN" ] || [ "$modo" == "IPscan" ] || [ "$modo" == "ipscan" ]; then
             banner
             IPscan
-        elif [ "$mode" == "Procmon" ] || [ "$mode" == "PROCMON" ] || [ "$mode" == "procmon" ]; then
+        elif [ "$modo" == "Procmon" ] || [ "$modo" == "PROCMON" ] || [ "$modo" == "procmon" ]; then
             banner
             procmon
         else
