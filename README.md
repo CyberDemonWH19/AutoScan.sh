@@ -1,7 +1,7 @@
 #Instalación
 *Cada modo escanea y genera archivos con la información*
 ```
-git clone https://github.com/CyberDemonWH19/Herramienta-bash-espanol.git
+git clone https://github.com/CyberDemonWH19/AutoScan.sh.git
 
 ```
 
