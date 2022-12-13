@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-#** Colores
+# Colores
 verde="\e[0;32m\033[1m"
 NC="\033[0m\e[0m"
 rojo="\e[0;31m\033[1m"
@@ -10,36 +10,36 @@ morado="\e[0;35m\033[1m"
 turquesa="\e[0;36m\033[1m"
 gris="\e[0;37m\033[1m"
 
-#** Verifica que Nmap esta instalado
+# Verifica que Nmap y Exploitdb esta instalado
 function DependenciaA() {
     sleep 1.5
     counter=0
     echo -e "\n${amarillo} ${NC}${gris} Comprobando programas necesarios...\n${NC}"
     sleep 1
-    programa="nmap"
-    if [ "$(command -v $programa)" ]; then
-        echo -e "\t${verde}${NC}${gris} La herramienta${NC}${amarillo} $programa${NC}${gris} se encuentra instalada"
-        let counter+=1
+    programa1="searchsploit"
+    programa2="nmap"
+    if [ "$(command -v $programa1)" ] && [ "$(command -v $programa2)" ]; then
+        echo -e "\t${verde}${NC}${gris} La herramientas${NC}${amarillo} $programa1 y $programa2${NC}${gris} se encuentran instaladas"
+        let counter+=2
     else
         echo -e "\t${rojo}${NC}${gris} La herramienta${NC}${amarillo} $programa${NC}${gris} no se encuentra instalada"
     fi
     sleep 0.4
-
-    if [ "$(echo $counter)" == "1" ]; then
+    if [ "$(echo $counter)" == "2" ]; then
         echo -e "\t\n${amarillo}${NC}${verde} Comenzando...\n${NC}"
-        sleep 3
+        sleep 1
     else
-        echo -e "\n${rojo}${NC}${turquesa} Es necesario contar con la herramienta nmap instalada para ejecutar este script${NC}\n"
-        echo -e "${azul}Se instalará nmap cuando finalice vuelva a ejecutar la herramienta${NC}"
-        apt install nmap -y
+        echo -e "\n${rojo}${NC}${turquesa} Es necesario contar con la herramienta nmap y searchsploit(exploitdb) instalada para ejecutar este script${NC}\n"
+        echo -e "${azul}Se instalará el programa que hace falta, cuando finalice vuelva a ejecutar la herramienta${NC}"
+        apt install nmap exploitdb -y
         exit 1
     fi
 }
-#** Verifica que gobuster esta instalado
+# Verifica que gobuster esta instalado
 function DependenciaB() {
     sleep 1.5
     counter=0
-    echo -e "\n${amarillo} ${NC}${gris} Comprobando programas necesarios...\n${NC}"
+    echo -e "\n${amarillo} ${NC}${gris} Comprobando programa necesarios...\n${NC}"
     sleep 1
     programa="gobuster"
     if [ "$(command -v $programa)" ]; then
@@ -61,7 +61,7 @@ function DependenciaB() {
     fi
 }
 
-#** Logo de la Herramienta
+# Logo de la Herramienta
 function banner() {
     echo -e "${rojo}░█████╗░██╗░░░██╗████████╗░█████╗░░██████╗░█████╗░░█████╗░███╗░░██╗░░░░██████╗██╗░░██╗"
     sleep 0.05
@@ -93,13 +93,13 @@ function banner() {
     sleep 0.05
 }
 
-#** Panel de ayuda
+# Panel de ayuda
 function helpPanel() {
     banner
     echo -e "${turquesa}[USO]\nPonerte como root y ejecutar ./AutoScan.sh -m [Modo]\n\tModos:\n\tTCP \t\tEscaneo por TCP\n\tUDP  \t\tEscaneo por UDP\n\tSCTP  \t\tEscaneo por SCTP\n\tGOBUSCAN  \tFuzzing web\n\tIPSCAN  \tEscaneo de Host activos (/dev/tcp/)\n\tSISTEMA  \tTe indica el sistema mediante el ttl\n\tPROCMON \tMonitor de procesos${NC}"
 }
 
-#** Función de escaneo de hosts activos
+# Función de escaneo de hosts activos
 function IPscan() {
     echo -e "\n${morado}Enumerando IPs activas para 192.168.1.0/24\nSi quieres cambiarlo busca en el codigo ${NC}\n"
     ip=192.168.1. #Cambia esta IP manteniendo el formato
@@ -108,7 +108,7 @@ function IPscan() {
     done
     wait
 }
-#**Función Monitor de Procesos
+#Función Monitor de Procesos
 function procmon() {
     proceso_viejo=$(ps -eo command)
     while true; do
@@ -117,7 +117,7 @@ function procmon() {
         proceso_viejo=$proceso_nuevo
     done
 }
-#** Función ¿QUE SISTEMA ES?
+# Función ¿QUE SISTEMA ES? Te indica solo si es Linux o Windows, puedes agregar mas
 function Sistema() {
     echo -e "${morado}Ingresa la IP para averiguar si es Windows o Linux\nMediante su ttl:\n${NC}"
     read IP
@@ -131,9 +131,9 @@ function Sistema() {
     fi
 }
 
-#** Función Escaneo de nmap por protocolo TCP
+# Función Escaneo de nmap por protocolo TCP
 function TCPscan() {
-    echo -e "${morado}Metodo ${NC}${amarillo}[TCP]${NC}\n${morado}Ingrese la IP a escanear: \n${NC}"
+    echo -e "${morado}Metodo ${NC}${amarillo}[TCP]${NC}\n${morado}Ingrese la IP a escanear:${NC}"
     read IP
     echo -e "${morado}Ingrese el --min-rate (tasa de paquetes 'minimos' por segundo 1000-5000${NC})"
     read paquetes
@@ -143,9 +143,15 @@ function TCPscan() {
     echo -e "\n${amarillo}[*]${NC}${verde} Iniciando escaneo de servicios de los puertos abiertos encontrados...\n${NC}"
     ports="$(cat TCPPorts | grep -oP '\d{1,5}/open' | awk '{print $1}' FS='/' | xargs | tr ' ' ',')"
     nmap -sCV -p$ports -v $IP -oN targetedTCP
+    servicios=$(awk '/open/ {print $4}' targetedTCP)
+    version=$(awk '/open/ {print $5}' targetedTCP)
+    for servicios in $servicios; do
+        for v in $version; do
+            searchsploit $servicios $v >>ExploitScanTCP.txt
+        done
+    done
 }
-
-#** Función Escaneo nmap por protocolo UDP
+# Función Escaneo nmap por protocolo UDP
 function UDPscan() {
     echo -e "${morado}Metodo ${NC}${amarillo}[UDP]${NC}\n${morado}Ingrese la IP a escanear:${NC}"
     read IP
@@ -157,9 +163,16 @@ function UDPscan() {
     echo -e "\n${amarillo}[*]${NC}${verde} Iniciando escaneo de servicios de los puertos abiertos encontrados...\n${NC}"
     ports="$(cat UDPPorts | grep -oP '\d{1,5}/open' | awk '{print $1}' FS='/' | xargs | tr ' ' ',')"
     nmap -sCV -sU -p$ports -v $IP -oN targetedUDP
+    servicios=$(awk '/open/ {print $4}' targetedUDP)
+    version=$(awk '/open/ {print $5}' targetedUDP)
+    for servicios in $servicios; do
+        for v in $version; do
+            searchsploit $servicios $v >>ExploitScanUDP.txt
+        done
+    done
 }
 
-#** Función Escaneo nmap por protocolo SCTP
+# Función Escaneo nmap por protocolo SCTP
 function SCTPscan() {
     echo -e "${morado}Metodo ${NC}${amarillo}[SCTP]${NC}\n${morado}Ingrese la IP a escanear:${NC}"
     read IP
@@ -171,9 +184,16 @@ function SCTPscan() {
     echo -e "\n${amarillo}[*]${NC}${verde} Iniciando escaneo de servicios de los puertos abiertos encontrados...\n${NC}"
     ports="$(cat SCTPPorts | grep -oP '\d{1,5}/open' | awk '{print $1}' FS='/' | xargs | tr ' ' ',')"
     nmap -sCV -sY -p$ports -v $IP -oN targetedSCTP
+    servicios=$(awk '/open/ {print $4}' targetedSCTP)
+    version=$(awk '/open/ {print $5}' targetedSCTP)
+    for servicios in $servicios; do
+        for v in $version; do
+            searchsploit $servicios $v >>ExploitScanSCTP.txt
+        done
+    done
 }
 
-#** Función Fuzzing web con gobuster
+# Función Fuzzing web con gobuster
 function GobuScan() {
     echo -e "${morado}Ingrese la URL a fuzzear${NC}"
     read URL
@@ -192,7 +212,7 @@ function GobuScan() {
     fi
 }
 
-#** SALIDA MANUAL
+# SALIDA MANUAL
 trap ctrl_c INT
 
 function ctrl_c() {
@@ -200,8 +220,8 @@ function ctrl_c() {
     exit 1
 }
 
-#** Main / Principal
-#** Si no eres root no puedes ejecutarla
+# Main / Principal
+# Si no eres root no puedes ejecutarla
 if [ "$(id -u)" == "0" ]; then
     declare -i parametros=0
     while getopts ":m:h:" arg; do
@@ -212,7 +232,7 @@ if [ "$(id -u)" == "0" ]; then
     done
     if [ $parametros -ne 1 ]; then
         helpPanel
-    else #** Dependiendo del modo ejecuta cada escaneo
+    else # Dependiendo del modo ejecuta cada escaneo
         if [ "$modo" == "TCP" ] || [ "$modo" == "Tcp" ] || [ "$modo" == "tcp" ]; then
             banner
             DependenciaA
@@ -239,7 +259,7 @@ if [ "$(id -u)" == "0" ]; then
             banner
             procmon
         else
-            echo -e "Modo no conocido"
+            echo -e "${rojo}Modo no conocido${NC}"
             exit 1
         fi
     fi
